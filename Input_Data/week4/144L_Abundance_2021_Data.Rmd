@@ -1,0 +1,149 @@
+---
+title: "144L_Abundance_2021_Data"
+author: "Gabrielle Mousseau"
+date: "10/18/2021"
+output: github_document
+---
+
+#Goal 
+This document sows how individual bottle bacterial abundance from 2021 remineralization experiments were processed, QC'd, and analyzed. Info on how to code and notes are also included. 
+
+
+#Intro to R Markdown 
+To create a new code chunk: Cmd + option + i.
+Load packages needed to analyze the data.
+Using settings, we can toggle on/off warnings that we dont want in our final rmd.
+```{r setup, include=FALSE}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(ggplot2)
+```
+
+
+#Import Data
+Attach data and join datasets usings variables that are the same across two dataframes
+```{r}
+excel_sheets("~/144l_students_2021/Input_Data/week4/144L_2021_BactAbund.xlsx")
+
+metadata <- read_excel("~/144l_students_2021/Input_Data/week4/144L_2021_BactAbund.xlsx", sheet = "Metadata")
+
+glimpse(metadata)
+#unique(metadata$Bottle)
+#unique(metadata$Treatment)
+
+data <- read_excel("~/144l_students_2021/Input_Data/week4/144L_2021_BactAbund.xlsx", sheet = "Data")
+glimpse(data)
+
+joined <- left_join(metadata, data) #attach data to metadata
+
+glimpse(joined)
+```
+
+
+#Prepare Data 
+We convert categorical data (date and time) to numeric, add columns with time elapsed for each treatment, and concert cells_uL to cells_L to help with TOC data later. We will also subset data for variables of interest and drop NA values.
+
+We will utilize **piping**. Piping allows you to five multiple commands. %>% means "first do this. THEN, do this" Then = %>% giving order to the commands. 
+```{r warning=FALSE}
+cells <- joined %>% 
+  mutate(Datetime = ymd_hm(Datetime),#splits apart Datetime as specified
+  cells_L = as.numeric(all_cells_uL) * 1000000) %>% 
+  group_by(Treatment, Bottle) %>% 
+  #group datasets so we can time elpase properly
+  mutate(interv = interval(first(Datetime), Datetime), 
+  s = as.numeric(interv), 
+  hours = s/3600, 
+  days = hours/24) %>% 
+  ungroup() %>% 
+  select(Experiment:DNA_Sample, cells_L, hours, days) %>%
+  drop_na(cells_L)
+  
+glimpse(cells)
+#View(cells)
+```
+
+#Plot Growth Curve
+```{r}
+custom.colors <- c("Control" = "#377E88", "Kelp Exudate" = "#4DAF4A", "Kelp Exudate_Nitrate_Phosphate" = "#E41A1C", "Glucose_Nitrate_Phosphate_" = "#FF7F00")
+
+levels <- c("Control", "Kelp Exudate", "Kelp Exudate_Nitrate_Phosphate", "Glucose_Nitrate_Phosphate")
+
+cells %>% 
+  mutate(dna = ifelse(DNA_Sample == T, "*", NA)) %>%
+  ggplot(aes(x=days, y = cells_L, group = interaction(Treatment, Bottle))) + 
+  geom_line(aes(color = factor(Treatment, levels= levels)), size =1) +
+  geom_point(aes(fill = factor(Treatment, levels = levels)),
+  size = 3, color = "black", shape = 21) +
+  geom_text(aes(label = dna), size = 12, color = "#E41A1C") +
+  labs(x = "Days", y = expression(paste("Cells, L"^-1)), fill = "") +
+  guides(color = "none") + 
+  scale_color_manual(values = custom.colors) + 
+  scale_fill_manual(values = custom.colors)
+  #facet_grid(rows = "Treatment")
+  theme_bw()
+  glimpse(cells)
+```
+
+
+#Next Steps
+We can calculate:
+-total change in cells from initial conditions to the end of the experiment
+-specific growth rate as the slope of ln(abundance) vs. time during exponential growth phase
+-doubling time as ln(2) divided by the specific growth rate
+-mean of each of these parameters across each treatment
+
+First, we need to determine where the exponential growth is occuring in each of our bottles, if it does. To do this, we'll plot ln(abundance) vs. time.
+
+#Identify exponential phase of growth in oiur remin experiments
+
+***Note" logs in R***
+
+log(x) gives the natural log of x, not the log base qo
+log10(x) would give the log base of 10
+log2(x) gives log base 2
+```{r}
+ln_cells <- cells %>%
+  group_by(Treatment, Bottle) %>%
+  mutate(ln_cells = log(cells_L), 
+         diff_ln_cells = ln_cells - lag(ln_cells, default = first(ln_cells)))
+#View(ln_cells)
+```
+
+Now, we can plot our new data!
+
+```{r fig.height=6, fig.width=8}
+ln_cells %>%
+  mutate(dna = ifelse(DNA_Sample == T, "*", NA)) %>%
+  ggplot(aes(x=days, y = diff_ln_cells, group = interaction(Treatment, Bottle))) + 
+  geom_line(aes(color = factor(Treatment, levels= levels)), size =1) +
+  geom_point(aes(fill = factor(Treatment, levels = levels)),
+  size = 3, color = "black", shape = 21) +
+  geom_text(aes(label = dna), size = 12, color = "#E41A1C") + 
+  labs(x = "Days", y = expression(paste("∆ln cells, L"^-1)),fill = "") +
+  guides(color = "none") + 
+  scale_color_manual(values = custom.colors) + 
+  scale_fill_manual(values = custom.colors) +
+  facet_wrap("Bottle", ncol =2) + 
+  theme_bw()
+```
+Exponential growth seems to be occurring right in the beginning of the experiment and again at the end.
+
+What happens if we plot ln_cells? Can we see more growth in the control?
+
+```{r fig.height=6, fig.width=8}
+ln_cells %>%
+  mutate(dna = ifelse(DNA_Sample == T, "*", NA)) %>%
+  ggplot(aes(x=days, y = ln_cells, group = interaction(Treatment, Bottle))) + 
+  geom_line(aes(color = factor(Treatment, levels= levels)), size =1) +
+  geom_point(aes(fill = factor(Treatment, levels = levels)),
+  size = 3, color = "black", shape = 21) +
+  geom_text(aes(label = dna), size = 12, color = "#E41A1C") + 
+  labs(x = "Days", y = expression(paste("ln cells, L"^-1)),fill = "") +
+  guides(color = "none") + 
+  scale_color_manual(values = custom.colors) + 
+  scale_fill_manual(values = custom.colors) +
+  facet_wrap("Bottle", ncol =2) + 
+  theme_bw()
+```
+This shows more growth in the beginning compared to the end as expected!
