@@ -3,13 +3,17 @@
 Gabrielle Mousseau
 10/18/2021
 
-#Goal This document sows how individual bottle bacterial abundance from
-2021 remineralization experiments were processed, QC’d, and analyzed.
-Info on how to code and notes are also included.
+#Goal
 
-#Intro to R Markdown To create a new code chunk: Cmd + option + i. Load
-packages needed to analyze the data. Using settings, we can toggle
-on/off warnings that we dont want in our final rmd.
+This document sows how individual bottle bacterial abundance from 2021
+remineralization experiments were processed, QC’d, and analyzed. Info on
+how to code and notes are also included.
+
+#Intro to R Markdown
+
+To create a new code chunk: Cmd + option + i. Load packages needed to
+analyze the data. Using settings, we can toggle on/off warnings that we
+dont want in our final rmd.
 
 #Import Data Attach data and join datasets usings variables that are the
 same across two dataframes
@@ -163,8 +167,6 @@ cells %>%
   scale_color_manual(values = custom.colors) + 
   scale_fill_manual(values = custom.colors)
 ```
-
-    ## Warning: Removed 40 rows containing missing values (geom_text).
 
 ![](144L_Abundance_2021_Data_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
@@ -619,11 +621,13 @@ cells %>%
     ## $ hours                <dbl> 0, 16, 28, 40, 52, 64, 76, 88, 100, 0, 16, 28, 40…
     ## $ days                 <dbl> 0.0000000, 0.6666667, 1.1666667, 1.6666667, 2.166…
 
-#Next Steps We can calculate: -total change in cells from initial
-conditions to the end of the experiment -specific growth rate as the
-slope of ln(abundance) vs. time during exponential growth phase
--doubling time as ln(2) divided by the specific growth rate -mean of
-each of these parameters across each treatment
+#Next Steps
+
+We can calculate: -total change in cells from initial conditions to the
+end of the experiment -specific growth rate as the slope of
+ln(abundance) vs. time during exponential growth phase -doubling time as
+ln(2) divided by the specific growth rate -mean of each of these
+parameters across each treatment
 
 First, we need to determine where the exponential growth is occuring in
 each of our bottles, if it does. To do this, we’ll plot ln(abundance)
@@ -662,8 +666,6 @@ ln_cells %>%
   theme_bw()
 ```
 
-    ## Warning: Removed 40 rows containing missing values (geom_text).
-
 ![](144L_Abundance_2021_Data_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 Exponential growth seems to be occurring right in the beginning of the
 experiment and again at the end.
@@ -685,8 +687,6 @@ ln_cells %>%
   facet_wrap("Bottle", ncol =2) + 
   theme_bw()
 ```
-
-    ## Warning: Removed 40 rows containing missing values (geom_text).
 
 ![](144L_Abundance_2021_Data_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 This shows more growth in the beginning compared to the end as expected!
