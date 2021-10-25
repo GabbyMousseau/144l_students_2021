@@ -164,8 +164,6 @@ cells %>%
   scale_fill_manual(values = custom.colors)
 ```
 
-    ## Warning: Removed 40 rows containing missing values (geom_text).
-
 ![](144L_Abundance_2021_Data_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
@@ -662,8 +660,6 @@ ln_cells %>%
   theme_bw()
 ```
 
-    ## Warning: Removed 40 rows containing missing values (geom_text).
-
 ![](144L_Abundance_2021_Data_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 Exponential growth seems to be occurring right in the beginning of the
 experiment and again at the end.
@@ -685,8 +681,6 @@ ln_cells %>%
   facet_wrap("Bottle", ncol =2) + 
   theme_bw()
 ```
-
-    ## Warning: Removed 40 rows containing missing values (geom_text).
 
 ![](144L_Abundance_2021_Data_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 This shows more growth in the beginning compared to the end as expected!
