@@ -6,10 +6,12 @@ output: github_document
 ---
 
 #Goal 
+
 This document sows how individual bottle bacterial abundance from 2021 remineralization experiments were processed, QC'd, and analyzed. Info on how to code and notes are also included. 
 
 
-#Intro to R Markdown 
+#Intro to R Markdown
+
 To create a new code chunk: Cmd + option + i.
 Load packages needed to analyze the data.
 Using settings, we can toggle on/off warnings that we dont want in our final rmd.
@@ -23,7 +25,7 @@ library(ggplot2)
 
 #Import Data
 Attach data and join datasets usings variables that are the same across two dataframes
-```{r}
+```{r warning=FALSE}
 excel_sheets("~/144l_students_2021/Input_Data/week4/144L_2021_BactAbund.xlsx")
 
 metadata <- read_excel("~/144l_students_2021/Input_Data/week4/144L_2021_BactAbund.xlsx", sheet = "Metadata")
@@ -64,7 +66,7 @@ glimpse(cells)
 ```
 
 #Plot Growth Curve
-```{r}
+```{r message=FALSE, warning=FALSE}
 custom.colors <- c("Control" = "#377E88", "Kelp Exudate" = "#4DAF4A", "Kelp Exudate_Nitrate_Phosphate" = "#E41A1C", "Glucose_Nitrate_Phosphate_" = "#FF7F00")
 
 levels <- c("Control", "Kelp Exudate", "Kelp Exudate_Nitrate_Phosphate", "Glucose_Nitrate_Phosphate")
@@ -87,6 +89,7 @@ cells %>%
 
 
 #Next Steps
+
 We can calculate:
 -total change in cells from initial conditions to the end of the experiment
 -specific growth rate as the slope of ln(abundance) vs. time during exponential growth phase
@@ -112,7 +115,7 @@ ln_cells <- cells %>%
 
 Now, we can plot our new data!
 
-```{r fig.height=6, fig.width=8}
+```{r fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
 ln_cells %>%
   mutate(dna = ifelse(DNA_Sample == T, "*", NA)) %>%
   ggplot(aes(x=days, y = diff_ln_cells, group = interaction(Treatment, Bottle))) + 
@@ -131,7 +134,7 @@ Exponential growth seems to be occurring right in the beginning of the experimen
 
 What happens if we plot ln_cells? Can we see more growth in the control?
 
-```{r fig.height=6, fig.width=8}
+```{r fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
 ln_cells %>%
   mutate(dna = ifelse(DNA_Sample == T, "*", NA)) %>%
   ggplot(aes(x=days, y = ln_cells, group = interaction(Treatment, Bottle))) + 
